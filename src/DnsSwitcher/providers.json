@@ -1,0 +1,9 @@
+{
+  "pythonPath": "python",
+  "interfaceName": "Ethernet",
+  "providers": [
+    { "key": "comss", "name": "COMSS", "ipv4": ["83.220.169.155", "212.109.195.93"], "ipv6": ["2a01:230:4:915::2", "2a03:6f00:a::3f24"], "doh": "https://dns.comss.one/dns-query", "checkUrl": "https://www.comss.ru/page.php?id=7315", "script": "Change_DNS_COMSS_notreset.py" },
+    { "key": "xbox", "name": "Xbox DNS", "ipv4": ["111.88.96.50", "111.88.96.51"], "ipv6": [], "doh": "https://xbox-dns.ru/dns-query", "checkUrl": "https://xbox-dns.ru/", "script": "Change_DNS_XBOX_notreset.py" },
+    { "key": "malw", "name": "MALW", "ipv4": ["95.216.204.218", "80.253.249.40"], "ipv6": [], "doh": "https://dns.malw.link/dns-query", "checkUrl": "https://info.dns.malw.link/setup", "script": "Change_DNS_MALW_notreset.py" }
+  ]
+}

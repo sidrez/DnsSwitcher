@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+publish/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local files
+*.log
+*.tmp
+*.cache
+__pycache__/
+*.py[cod]
+Thumbs.db
+Desktop.ini
+Scripts/DNS/.Change_DNS_XBOX_notreset_state.json
+
+# Copies accidentally placed in the workspace root; tracked copies are in Scripts/.
+/Change_DNS_COMSS_notreset.py
+/Change_DNS_MALW_notreset.py
+/Change_DNS_XBOX_notreset.py
+/Repair_Corporate_Split_DNS.ps1
+/Restore-DNS.py
+/vpn_dns_check.py
