@@ -72,14 +72,32 @@ public sealed record ProcessResult(int ExitCode, string StandardOutput, string S
 
 public static class ProviderCheckService
 {
-    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(12) };
+    private static readonly HttpClient Client = new(new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+    }) { Timeout = TimeSpan.FromSeconds(12) };
+
+    static ProviderCheckService() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
     public static async Task<List<string>> FindIpv4Async(DnsProvider provider)
     {
         Client.DefaultRequestHeaders.UserAgent.ParseAdd("DnsSwitcher/1.0");
         using var response = await Client.GetAsync(provider.CheckUrl);
         response.EnsureSuccessStatusCode();
-        var html = Encoding.UTF8.GetString(await response.Content.ReadAsByteArrayAsync());
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        var html = GetPageEncoding(response).GetString(bytes);
         return FindDnsPair(html);
+    }
+
+    private static Encoding GetPageEncoding(HttpResponseMessage response)
+    {
+        var contentType = response.Content.Headers.TryGetValues("Content-Type", out var values)
+            ? values.FirstOrDefault()
+            : null;
+        var match = Regex.Match(contentType ?? "", @"(?i)charset\s*=\s*([^;\s]+)");
+        if (!match.Success) return Encoding.UTF8;
+        try { return Encoding.GetEncoding(match.Groups[1].Value.Trim('"', '\'')); }
+        catch (ArgumentException) { return Encoding.UTF8; }
     }
 
     private static List<string> FindDnsPair(string html)
