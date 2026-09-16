@@ -39,14 +39,20 @@ public sealed class SettingsForm : Form
     }
     private void Save()
     {
+        ApplyFieldsToConfiguration();
+        ConfigurationStore.Save(_config);
+    }
+
+    private void ApplyFieldsToConfiguration()
+    {
         _config.PythonPath = _python.Text.Trim(); _config.InterfaceName = _interface.Text.Trim();
         foreach (var (provider, fields) in _fields) { provider.Ipv4 = Split(fields.Ipv4.Text); provider.Ipv6 = Split(fields.Ipv6.Text); provider.Doh = fields.Doh.Text.Trim(); }
-        ConfigurationStore.Save(_config);
     }
     private async Task CheckAsync()
     {
         try
         {
+            ApplyFieldsToConfiguration();
             foreach (var provider in _config.Providers)
             {
                 var found = await ProviderCheckService.FindIpv4Async(provider);
