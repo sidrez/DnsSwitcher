@@ -8,9 +8,13 @@ public static class DnsService
 {
     public static async Task<(string Name, bool IsDhcp)> GetCurrentAsync(AppConfiguration config)
     {
-        var output = await RunAsync("powershell", $"-NoProfile -Command \"(Get-DnsClientServerAddress -InterfaceAlias '{config.InterfaceName.Replace("'", "''")}' -AddressFamily IPv4 -ErrorAction Stop).ServerAddresses | ForEach-Object {{ $_.IPAddressToString }}\"");
+        var alias = config.InterfaceName.Replace("'", "''");
+        var command = "$dns = Get-DnsClientServerAddress -InterfaceAlias '" + alias + "' -AddressFamily IPv4 -ErrorAction Stop; " +
+            "$adapter = Get-CimInstance Win32_NetworkAdapterConfiguration | Where-Object { $_.InterfaceIndex -eq $dns.InterfaceIndex }; " +
+            "if ($null -eq $adapter.DNSServerSearchOrder) { '__DHCP__' } else { $dns.ServerAddresses | ForEach-Object { $_.IPAddressToString } }";
+        var output = await RunAsync("powershell", $"-NoProfile -Command \"{command}\"");
         var current = output.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (current.Length == 0) return ("Авто (DHCP)", true);
+        if (current.Length == 0 || current.Contains("__DHCP__")) return ("Авто (DHCP)", true);
         var provider = config.Providers.FirstOrDefault(p => p.Ipv4.OrderBy(x => x).SequenceEqual(current.OrderBy(x => x)));
         return provider is null ? ("Неизвестный DNS", false) : (provider.Name, false);
     }
