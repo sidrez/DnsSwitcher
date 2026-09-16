@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace DnsSwitcher;
 
 public sealed class SettingsForm : Form
@@ -9,7 +11,7 @@ public sealed class SettingsForm : Form
 
     public SettingsForm(AppConfiguration config)
     {
-        _config = config; Text = "Настройки DnsSwitcher"; ClientSize = new Size(650, 535); FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; BackColor = Color.FromArgb(30, 30, 30); ForeColor = Color.Gainsboro; StartPosition = FormStartPosition.CenterParent;
+        _config = config; Text = "Настройки DnsSwitcher"; ClientSize = new Size(750, 535); FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; BackColor = Color.FromArgb(30, 30, 30); ForeColor = Color.Gainsboro; StartPosition = FormStartPosition.CenterParent;
         AddField("Python", _python, config.PythonPath, 20); AddField("Интерфейс", _interface, config.InterfaceName, 55);
         var y = 100;
         foreach (var provider in config.Providers)
@@ -17,15 +19,23 @@ public sealed class SettingsForm : Form
             Controls.Add(new Label { Text = provider.Name, ForeColor = Color.LightGreen, Location = new Point(20, y), AutoSize = true }); y += 25;
             var v4 = AddField("IPv4", null, string.Join(',', provider.Ipv4), y); y += 30;
             var v6 = AddField("IPv6", null, string.Join(',', provider.Ipv6), y); y += 30;
-            var doh = AddField("DoH", null, provider.Doh, y); y += 35; _fields[provider] = (v4, v6, doh);
+            var doh = AddField("DoH", null, provider.Doh, y);
+            AddOpenSiteButton(provider, y);
+            y += 35; _fields[provider] = (v4, v6, doh);
         }
         var check = new Button { Text = "Проверить актуальность IP", Location = new Point(20, 480), Size = new Size(220, 32) }; check.Click += async (_, _) => await CheckAsync(); Controls.Add(check);
-        var save = new Button { Text = "Сохранить", DialogResult = DialogResult.OK, Location = new Point(450, 480), Size = new Size(85, 32) }; save.Click += (_, _) => Save(); Controls.Add(save);
-        var cancel = new Button { Text = "Отмена", DialogResult = DialogResult.Cancel, Location = new Point(545, 480), Size = new Size(85, 32) }; Controls.Add(cancel); AcceptButton = save; CancelButton = cancel;
+        var save = new Button { Text = "Сохранить", DialogResult = DialogResult.OK, Location = new Point(550, 480), Size = new Size(85, 32) }; save.Click += (_, _) => Save(); Controls.Add(save);
+        var cancel = new Button { Text = "Отмена", DialogResult = DialogResult.Cancel, Location = new Point(645, 480), Size = new Size(85, 32) }; Controls.Add(cancel); AcceptButton = save; CancelButton = cancel;
     }
     private TextBox AddField(string label, TextBox? target, string value, int y)
     {
-        Controls.Add(new Label { Text = label, Location = new Point(20, y + 5), AutoSize = true }); var box = target ?? new TextBox(); box.Text = value; box.Location = new Point(100, y); box.Size = new Size(530, 23); Controls.Add(box); return box;
+        Controls.Add(new Label { Text = label, Location = new Point(20, y + 5), AutoSize = true }); var box = target ?? new TextBox(); box.Text = value; box.Location = new Point(100, y); box.Size = new Size(510, 23); Controls.Add(box); return box;
+    }
+    private void AddOpenSiteButton(DnsProvider provider, int y)
+    {
+        var button = new Button { Text = "Открыть сайт", Location = new Point(620, y - 1), Size = new Size(110, 25) };
+        button.Click += (_, _) => Process.Start(new ProcessStartInfo(provider.CheckUrl) { UseShellExecute = true });
+        Controls.Add(button);
     }
     private void Save()
     {

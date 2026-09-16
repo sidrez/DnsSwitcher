@@ -1,6 +1,8 @@
 import os
 import time
 import argparse
+import ctypes
+import sys
 
 
 
@@ -10,6 +12,13 @@ def has_ipv6_default_route(interface):
         '-AddressFamily IPv6 -DestinationPrefix \'::/0\' -ErrorAction SilentlyContinue"'
     ).read()
     return "::/0" in route
+
+
+def is_admin():
+    try:
+        return os.getuid() == 0
+    except AttributeError:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
 
 # Функция для изменения DNS
 def set_dns(interface, dns_ipv4, dns_ipv6, doh_template):
@@ -57,6 +66,10 @@ if __name__ == "__main__":
     parser.add_argument("--doh")
     parser.add_argument("--interface")
     args = parser.parse_args()
+    if not is_admin():
+        print("Скрипт требует запуска с правами администратора.")
+        print("[DNS_DECISION] changed=false reason=NOT_ADMIN")
+        sys.exit(1)
     # Название интерфейса
     interface_name = args.interface or "Ethernet"
 
